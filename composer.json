@@ -62,5 +62,11 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": {
+        "bakong-khqr": {
+            "type": "vcs",
+            "url": "https://github.com/khqr/bakong-khqr"
+        }
+    }
 }

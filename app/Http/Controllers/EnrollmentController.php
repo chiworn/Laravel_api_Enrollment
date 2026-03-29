@@ -41,7 +41,7 @@ class EnrollmentController extends Controller
             'tb_enrollment.created_at'
         )
 
-        // ✅ ADD SEARCH (ID + NAME)
+        // ADD SEARCH (ID + NAME)
         ->when($search, function ($query) use ($search) {
             $query->where(function ($q) use ($search) {
 
