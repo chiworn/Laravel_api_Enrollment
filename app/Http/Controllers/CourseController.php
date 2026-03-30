@@ -2,55 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class CourseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $course = DB::table('tb_course')->get();
+        $courses = Course::all();
         return response()->json([
-            'status' => 202,
-            'message'=>'success',
-            'Data'  => $course,
-        ]);
+            'status' => 200,
+            'message' => 'success',
+            'data' => $courses,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
-            'course_name'      => 'required|string|max:255',
-            'description'      => 'required|string',
-            'duration_month'   => 'required|integer|min:1'
+        $validated = $request->validate([
+            'course_name'    => 'required|string|max:255',
+            'description'    => 'required|string',
+            'duration_month' => 'required|integer|min:1'
         ]);
 
-        $id = DB::table('tb_course')->insertGetId([
-            'course_name'     => $request->course_name,
-            'description'     => $request->description,
-            'duration_month'  => $request->duration_month,
-            'created_at'      => now()
-        ]);
+        $validated['created_at'] = now(); 
+
+        $course = Course::create($validated);
 
         return response()->json([
-            'status' => 202,
+            'status' => 201,
             'message' => 'Course created successfully',
-            'course_id' => $id
-        ], 202);
+            'data' => $course
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show( $id)
+    public function show($id)
     {
-         $course = DB::table('tb_course')->where('id', $id)->first();
+        $course = Course::find($id);
 
         if (!$course) {
             return response()->json([
@@ -62,61 +50,51 @@ class CourseController extends Controller
         return response()->json([
             'status' => 200,
             'data'   => $course
-        ]);
+        ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        
-        $request->validate([
-            'course_name'      => 'required|string|max:255',
-            'description'      => 'required|string',
-            'duration_month'   => 'required|integer|min:1'
-        ]);
+        $course = Course::find($id);
 
-        $updated = DB::table('tb_course')
-            ->where('id', $id)
-            ->update([
-                'course_name'    => $request->course_name,
-                'description'    => $request->description,
-                'duration_month' => $request->duration_month,
-                'created_at'      => now()
-            ]);
-
-        if (!$updated) {
-            return response()->json([
-                'status'  => 404,
-                'message' => 'Course not found or no changes made'
-            ], 404);
-        }
-
-        return response()->json([
-            'status'  => 200,
-            'message' => 'Course updated successfully'
-        ]);
-    }
-
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-         $deleted = DB::table('tb_course')->where('id', $id)->delete();
-
-        if (!$deleted) {
+        if (!$course) {
             return response()->json([
                 'status'  => 404,
                 'message' => 'Course not found'
             ], 404);
         }
 
+        $validated = $request->validate([
+            'course_name'    => 'required|string|max:255',
+            'description'    => 'required|string',
+            'duration_month' => 'required|integer|min:1'
+        ]);
+
+        $course->update($validated);
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Course updated successfully',
+            'data'    => $course
+        ], 200);
+    }
+
+    public function destroy(string $id)
+    {
+        $course = Course::find($id);
+
+        if (!$course) {
+            return response()->json([
+                'status'  => 404,
+                'message' => 'Course not found'
+            ], 404);
+        }
+
+        $course->delete();
+
         return response()->json([
             'status'  => 200,
             'message' => 'Course deleted successfully'
-        ]);
+        ], 200);
     }
 }

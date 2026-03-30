@@ -2,76 +2,94 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Price;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PriceController extends Controller
 {
-    // List all prices
     public function index()
     {
-        $prices = DB::table('tb_price')->get();
+        $prices = Price::all();
         return response()->json([
-            'message' => 'success ',
-            'Data'    => $prices 
-        ]);
+            'status' => 200,
+            'message' => 'success',
+            'data' => $prices
+        ], 200);
     }
 
-    // Store new price
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'price_course' => 'required|numeric',
         ]);
 
-        $id = DB::table('tb_price')->insertGetId([
-            'price_course' => $request->price_course,
-            'created_at' => now()
-        ]);
+        $validated['created_at'] = now();
+        $price = Price::create($validated);
 
-        $price = DB::table('tb_price')->where('id', $id)->first();
-        return response()->json($price, 201);
+        return response()->json([
+            'status' => 201,
+            'message' => 'Price created successfully',
+            'data' => $price
+        ], 201);
     }
 
-    // Show single price
     public function show($id)
     {
-        $price = DB::table('tb_price')->where('id', $id)->first();
+        $price = Price::find($id);
+
         if (!$price) {
-            return response()->json(['message' => 'Not Found'], 404);
+            return response()->json([
+                'status' => 404,
+                'message' => 'Not Found'
+            ], 404);
         }
-        return response()->json($price);
+
+        return response()->json([
+            'status' => 200,
+            'data' => $price
+        ], 200);
     }
 
-    // Update price
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $price = Price::find($id);
+
+        if (!$price) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Not Found'
+            ], 404);
+        }
+
+        $validated = $request->validate([
              'price_course' => 'required|numeric',
         ]);
 
-        $updated = DB::table('tb_price')->where('id', $id)->update([
-            'price_course' => $request->price_course,
-        ]);
+        $price->update($validated);
 
-        if (!$updated) {
-            return response()->json(['message' => 'Not Found'], 404);
-        }
-
-        $price = DB::table('tb_price')->where('id', $id)->first();
         return response()->json([
+            'status' => 200,
             'message' => 'update success',
             'data' => $price
-        ]);
+        ], 200);
     }
 
-    // Delete price
     public function destroy($id)
     {
-        $deleted = DB::table('tb_price')->where('id', $id)->delete();
-        if (!$deleted) {
-            return response()->json(['message' => 'Not Found'], 404);
+        $price = Price::find($id);
+
+        if (!$price) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Not Found'
+            ], 404);
         }
-        return response()->json(['message' => 'Deleted successfully']);
+
+        $price->delete();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Deleted successfully'
+        ], 200);
     }
 }

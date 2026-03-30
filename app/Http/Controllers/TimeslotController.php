@@ -2,53 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Timeslot;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class TimeslotController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-         $course = DB::table('tb_timeslot')->get();
+        $timeslots = Timeslot::all();
         return response()->json([
-            'status' => 202,
-            'message'=>'success',
-            'Data'  => $course,
-        ]);
+            'status' => 200,
+            'message' => 'success',
+            'data' => $timeslots,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'start_time' => 'required|string|max:255',
             'end_time'   => 'required|string|max:255',
         ]);
 
-        $id = DB::table('tb_timeslot')->insertGetId([
-            'start_time' => $request->start_time,
-            'end_time'   => $request->end_time,
-            'created_at' => now(),
-        ]);
+        $validated['created_at'] = now();
+        $timeslot = Timeslot::create($validated);
 
         return response()->json([
             'status' => 201,
             'message' => 'Timeslot added successfully',
-            'timeslot_id' => $id
+            'data' => $timeslot
         ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show( $id)
+    public function show($id)
     {
-        $slot = DB::table('tb_timeslot')->where('id', $id)->first();
+        $slot = Timeslot::find($id);
 
         if (!$slot) {
             return response()->json([
@@ -59,16 +47,13 @@ class TimeslotController extends Controller
 
         return response()->json([
             'status' => 200,
-            'timeslot' => $slot
+            'data' => $slot
         ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-          $slot = DB::table('tb_timeslot')->where('id', $id)->first();
+        $slot = Timeslot::find($id);
 
         if (!$slot) {
             return response()->json([
@@ -77,23 +62,23 @@ class TimeslotController extends Controller
             ], 404);
         }
 
-        DB::table('tb_timeslot')->where('id', $id)->update([
-            'start_time' => $request->start_time ?? $slot->start_time,
-            'end_time'   => $request->end_time ?? $slot->end_time,
+        $validated = $request->validate([
+            'start_time' => 'sometimes|required|string|max:255',
+            'end_time'   => 'sometimes|required|string|max:255',
         ]);
+
+        $slot->update($validated);
 
         return response()->json([
             'status' => 200,
-            'message' => 'Timeslot updated successfully'
-        ]);
+            'message' => 'Timeslot updated successfully',
+            'data' => $slot
+        ], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy( $id)
+    public function destroy($id)
     {
-         $slot = DB::table('tb_timeslot')->where('id', $id)->first();
+        $slot = Timeslot::find($id);
 
         if (!$slot) {
             return response()->json([
@@ -102,11 +87,11 @@ class TimeslotController extends Controller
             ], 404);
         }
 
-        DB::table('tb_timeslot')->where('id', $id)->delete();
+        $slot->delete();
 
         return response()->json([
             'status' => 200,
             'message' => 'Timeslot deleted successfully'
-        ]);
+        ], 200);
     }
 }

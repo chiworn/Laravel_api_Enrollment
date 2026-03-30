@@ -1,103 +1,113 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use App\Models\Student;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $students = DB::table('tb_students')->get();
+        $students = Student::all();
         return response()->json([
-            'status' => 202,
-            'message'=>'success',
-            'Data'  => $students,
-        ]);
+            'status' => 200,
+            'message' => 'success',
+            'data' => $students,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $val = $request->validate([
+        $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
             'email_stu'  => 'required|email|unique:tb_students,email_stu',
             'phone_num'  => 'required|string|max:100',
             'gender'     => 'required|string',
         ]);
-        DB::table('tb_students')->insert([
-            'frist_name' => $val['first_name'],
-            'last_name'  => $val['last_name'],
-            'email_stu'  => $val['email_stu'],
-            'phone_num'  => $val['phone_num'],
+
+        $student = Student::create([
+            'frist_name' => $validated['first_name'],
+            'last_name'  => $validated['last_name'],
+            'email_stu'  => $validated['email_stu'],
+            'phone_num'  => $validated['phone_num'],
+            'gender'     => $validated['gender'],
             'creat_at'   => now()
         ]);
 
-        $students = DB::table('tb_students')->get();
         return response()->json([
-            'status'         =>  202,
-            'message'        => 'insert succes',
-            'Data_students'  =>  $students,
-        ]);
+            'status'  => 201,
+            'message' => 'insert success',
+            'data'    => $student,
+        ], 201);
     }
 
     public function show(string $id)
     {
-        $student = DB::table('tb_students')->where('id',$id)->first();
-        if(!$student){
+        $student = Student::find($id);
+
+        if (!$student) {
             return response()->json([
                 'status' => 404,
-                'message' => 'students not foun',
-            ]);
+                'message' => 'Student not found',
+            ], 404);
         }
-         return response()->json([
-                'message' => 'Sreach successfully',
-                'Student' => $student,
-            ],200);
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Search successfully',
+            'data' => $student,
+        ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $req, string $id)
+    public function update(Request $request, string $id)
     {
+        $student = Student::find($id);
 
-         $val = $req->validate([
+        if (!$student) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Student not found',
+            ], 404);
+        }
+
+        $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
-            'email_stu'  => 'required|email|unique:tb_students,email_stu',
+            'email_stu'  => 'required|email|unique:tb_students,email_stu,' . $id,
             'phone_num'  => 'required|string|max:100',
             'gender'     => 'required|string',
         ]);
-        DB::table('tb_students')->where('id',$id)->update([
-            'frist_name' => $val['first_name'],
-            'last_name'  => $val['last_name'],
-            'email_stu'  => $val['email_stu'],
-            'phone_num'  => $val['phone_num'],
-            'creat_at'   => now()
-        ]);
-        $update = DB::table('tb_students')->where('id',$id)->first();
-        return response()->json([
-            'status:'    => 202,
-            'Message Success:' => 'Update student success',
-            'Studnets update:' => $update,
+
+        $student->update([
+            'frist_name' => $validated['first_name'],
+            'last_name'  => $validated['last_name'],
+            'email_stu'  => $validated['email_stu'],
+            'phone_num'  => $validated['phone_num'],
+            'gender'     => $validated['gender']
         ]);
 
+        return response()->json([
+            'status' => 200,
+            'message' => 'Update student success',
+            'data' => $student,
+        ], 200);
     }
+
     public function destroy(string $id)
     {
-       $del = DB::table('tb_students')->where('id',$id)->delete();
-        if(!$del){
-             return response()->json(['message' => 'Student not found'], 404);
+        $student = Student::find($id);
+
+        if (!$student) {
+            return response()->json(['status' => 404, 'message' => 'Student not found'], 404);
         }
+
+        $student->delete();
+
         return response()->json([
-            'Message'   => 'Delete Success',
-        ],202);
+            'status' => 200,
+            'message' => 'Delete Success',
+        ], 200);
     }
 }
